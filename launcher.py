@@ -9,29 +9,45 @@ from alive_progress import alive_bar
 
 LOGS_LEVEL = logging.DEBUG
 
-def chkdir(dir,create=False,LogOutput=True):
+def chkdir(dir,isRM=False,onlyCR=False,LogOutput=True):
     if LogOutput:
         log.debug("run func")
-        if create:
+        if onlyCR:
+            if isRM:
+                log.warning("存在目录:"+dir)
+                shutil.rmtree(dir)
+                log.info("删除目录:"+dir)
+                return
             log.warning("没有目录:"+dir)
             os.makedirs(dir)
             log.info("创建目录:"+dir)
         else:
-            if(os.path.exists(dir) == False):
+            if((os.path.exists(dir) == False) and not isRM):
                 log.warning("没有目录:"+dir)
                 os.makedirs(dir)
                 log.info("创建目录:"+dir)
+                return
+            if((os.path.exists(dir) == True) and isRM):
+                log.warning("存在目录:"+dir)
+                shutil.rmtree(dir)
+                log.info("删除目录:"+dir)
     else:
-        if create:
+        if onlyCR:
+            if isRM:
+                shutil.rmtree(dir)
+                return
             os.makedirs(dir)
         else:
-            if(os.path.exists(dir) == False):
+            if((os.path.exists(dir) == False) and not isRM):
                 os.makedirs(dir)
+                return
+            if((os.path.exists(dir) == True) and isRM):
+                shutil.rmtree(dir)
 
 
 runpath = os.path.split(os.path.realpath(sys.argv[0]))[0]
-chkdir(runpath+"\\launcher",False,False)
-chkdir(runpath+"\\launcher\\logs",False,False)
+chkdir(runpath+"\\launcher",False,False,False)
+chkdir(runpath+"\\launcher\\logs",False,False,False)
 log = logging.getLogger("log")
 log_sh = logging.StreamHandler()
 log_fh = handlers.TimedRotatingFileHandler(runpath+"\\launcher\\logs/emcl32.log",when="h",encoding="utf-8")
@@ -85,9 +101,8 @@ def down_verjson(minecraft_path,ver,name="~~usever~~",redown=False):
     chkdir(minecraft_path)
     chkdir(minecraft_path+"\\versions")
     if(os.path.exists(minecraft_path+"\\versions\\"+ver) == False or redown):
-        log.info("删除目录:"+minecraft_path+"\\versions"+ver)
-        shutil.rmtree(minecraft_path+"\\versions\\"+ver)
         chkdir(minecraft_path+"\\versions\\"+ver,True)
+        chkdir(minecraft_path+"\\versions\\"+ver,False,True)
         for i in range(len(mc_js["versions"])):
             if(mc_js["versions"][i]["id"] == ver):
                 break
@@ -111,7 +126,7 @@ def down_verjson(minecraft_path,ver,name="~~usever~~",redown=False):
 
 def okbtnrun():
     log.info("准备下载"+vers_var.get()+" JSON")
-    down_verjson(runpath+"\\.minecraft",vers_var.get(),"demo")
+    down_verjson(runpath+"\\.minecraft",vers_var.get(),"demo",True)
     now_js = js.load(open(runpath+"\\.minecraft\\versions\\demo\\version.json","r",encoding="utf-8"))
     log.info("debug:"+datecov_utc(now_js["releaseTime"])+"||"+now_js["type"]+"||"+now_js["id"])
 
@@ -134,6 +149,10 @@ def ui_init():
     okbtn.grid(column=0,row=4)
 
 def debug():
+    tmp = []
+    for everyKey in mc_js["versions"][72].keys():
+        tmp.append(everyKey)
+    log.info(tmp)
     with alive_bar(50,title="Download Minecraft",spinner="dots_waves",bar="smooth",force_tty=True) as bar:
         for i in range(50):
             bar.text("Processing Work #%d"%(i+1))
