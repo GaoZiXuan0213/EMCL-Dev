@@ -1,7 +1,7 @@
 from ensurepip import version
 from tkinter import *
 import json as js
-import os,sys,logging,datetime,time,shutil,alive_progress
+import os,sys,logging,datetime,time,shutil
 import requests as web
 from logging import handlers
 import tkinter.ttk as ttk
@@ -12,19 +12,22 @@ LOGS_LEVEL = logging.DEBUG
 def chkdir(dir,create=False,LogOutput=True):
     if LogOutput:
         log.debug("run func")
-    if create:
-        if LogOutput:
+        if create:
             log.warning("没有目录:"+dir)
-        os.makedirs(dir)
-        if LogOutput:
-            log.info("创建目录:"+dir)
-    else:
-        if(os.path.exists(dir) == False):
-            if LogOutput:
-                log.warning("没有目录:"+dir)
             os.makedirs(dir)
-            if LogOutput:
+            log.info("创建目录:"+dir)
+        else:
+            if(os.path.exists(dir) == False):
+                log.warning("没有目录:"+dir)
+                os.makedirs(dir)
                 log.info("创建目录:"+dir)
+    else:
+        if create:
+            os.makedirs(dir)
+        else:
+            if(os.path.exists(dir) == False):
+                os.makedirs(dir)
+
 
 runpath = os.path.split(os.path.realpath(sys.argv[0]))[0]
 chkdir(runpath+"\\launcher",False,False)
@@ -52,7 +55,7 @@ def down_verinfo(redown=False):
         if v:
             file.write(v.content)
             file.close()
-            log.info("已下载Minecraft版本信息表,保存在 \launcher\\version.json!")
+            log.info("已下载Minecraft版本信息表,保存在 \\launcher\\version.json!")
             mc_js = js.load(open(runpath+"\\launcher/version.json","r",encoding="utf-8"))
             return 0
         else:
@@ -81,10 +84,10 @@ def down_verjson(minecraft_path,ver,name="~~usever~~",redown=False):
     log.info(".minecraft目录:"+minecraft_path)
     chkdir(minecraft_path)
     chkdir(minecraft_path+"\\versions")
-    if(os.path.exists(minecraft_path+"\\versions\\"+name) == False or redown):
-        log.info("删除目录:"+minecraft_path+"\\versions"+name)
-        shutil.rmtree(minecraft_path+"\\versions\\"+name)
-        chkdir(minecraft_path+"\\versions\\"+name,True)
+    if(os.path.exists(minecraft_path+"\\versions\\"+ver) == False or redown):
+        log.info("删除目录:"+minecraft_path+"\\versions"+ver)
+        shutil.rmtree(minecraft_path+"\\versions\\"+ver)
+        chkdir(minecraft_path+"\\versions\\"+ver,True)
         for i in range(len(mc_js["versions"])):
             if(mc_js["versions"][i]["id"] == ver):
                 break
@@ -131,11 +134,11 @@ def ui_init():
     okbtn.grid(column=0,row=4)
 
 def debug():
-    with alive_bar(100,title="Download Minecraft",spinner="dots_waves",bar="smooth",force_tty=True) as bar:
-        for i in range(100):
+    with alive_bar(50,title="Download Minecraft",spinner="dots_waves",bar="smooth",force_tty=True) as bar:
+        for i in range(50):
             bar.text("Processing Work #%d"%(i+1))
             bar()
-            time.sleep(.5)
+            time.sleep(.1)
     log.debug("debug end")
 
 down_verinfo()
@@ -143,5 +146,5 @@ ui_init()
 log.info("窗口已经显示")
 log.debug("debug start:")
 debug()
-#uipage.mainloop()
+uipage.mainloop()
 log.info("Stopped!")
