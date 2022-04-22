@@ -1,7 +1,7 @@
 from ensurepip import version
 from tkinter import *
 import json as js
-import os,sys,logging,datetime,time,shutil
+import os,sys,logging,datetime,time,shutil,hashlib,threading
 import requests as web
 from logging import handlers
 import tkinter.ttk as ttk
@@ -62,6 +62,24 @@ log.info("Log Start,已启动日志记录器")
 
 minecraft_dir = runpath+"\\.minecraft"
 
+def sha1(file_path):
+    with open(file_path,'rb') as f:
+        hash = hashlib.sha1().update(f.read()).hexdigest()
+        log.info("计算了sha1:"+hash)
+        return hash
+
+def down_file(url,file_path,mode="wb+"):
+    f = open(file_path,mode)
+    v = web.get(url,headers="")
+    if v:
+        log.info("下载:"+url)
+        f.write(v.content)
+        f.close()
+        return 0
+    else:
+        log.warning("无法下载:"+url)
+        return 1
+
 def get_json(url,file_path="notsave",mode="wb+"):
     log.debug("run func")
     v = web.get(url,headers="")
@@ -83,15 +101,9 @@ def down_verinfo(redown=False):
     log.debug("run func")
     global mc_js
     if redown:
-        file = open(runpath+"\\launcher/version.json","wb+")
-        log.debug("GET https://launchermeta.mojang.com/mc/game/version_manifest.json")
-        v = web.get("https://launchermeta.mojang.com/mc/game/version_manifest.json")
-        log.info("下载Minecraft版本信息表中.")
-        if v:
-            file.write(v.content)
-            file.close()
+        log.info("下载Minecraft版本信息表中...")
+        if(get_json("https://launchermeta.mojang.com/mc/game/version_manifest.json",runpath+"\\launcher/version.json")):
             log.info("已下载Minecraft版本信息表,保存在 \\launcher\\version.json!")
-            mc_js = js.load(open(runpath+"\\launcher/version.json","r",encoding="utf-8"))
             return 0
         else:
             log.error("无法连接至launchermeta.mojang.com!")
@@ -114,7 +126,7 @@ def datecov_utc(time,format="%Y/%m/%d %H:%M:%S"):
 def down_verjson(minecraft_path,ver,name="~~usever~~",redown=False):
     log.debug("run func")
     i = 0
-    if(name == "~~usever~~~"):
+    if(name == "~~usever~~"):
         name = ver
     log.info(".minecraft目录:"+minecraft_path)
     chkdir(minecraft_path)
@@ -125,12 +137,7 @@ def down_verjson(minecraft_path,ver,name="~~usever~~",redown=False):
         for i in range(len(mc_js["versions"])):
             if(mc_js["versions"][i]["id"] == ver):
                 break
-        log.debug("GET "+mc_js["versions"][i]["url"])
-        v = web.get(mc_js["versions"][i]["url"])
-        f = open(minecraft_path+"\\versions\\"+name+"/"+name+".json","wb+")
-        if v:
-            f.write(v.content)
-            f.close()
+        if(get_json(mc_js["versions"][i]["url"],minecraft_path+"\\versions\\"+name+"\\"+name+".json")):
             log.info("已下载 "+ver+name+" JSON,保存在 "+minecraft_path+"\\versions\\"+name+"\\"+name+".json"+"!")
             log.debug("redown json mode:"+str(redown))
             return 0
@@ -143,11 +150,43 @@ def down_verjson(minecraft_path,ver,name="~~usever~~",redown=False):
         log.debug("redown json mode:"+str(redown))
         return 2
 
+class DownloadThread (threading.Thread):
+    def __init__(self,threadID,name,url,path,mode="wb+"):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.url = url
+        self.path = path
+        self.mode = mode
+        log.info(f"下载线程已设置#{str(self.threadID)}: {self.name}")
+    def run(self):
+        log.info(f"启动下载线程#{str(self.threadID)}: {self.name}")
+        down_file(self.url,self.path,self.mode)
+        log.info(f"启动下载线程#{str(self.threadID)}: {self.name}")
+
 def down_objects(mc_path,ver_js):
+    i = 0
     log.debug("run func")
     chkdir(mc_path+"\\assets")
     chkdir(mc_path+"\\assets\\indexes")
-    obj_json = get_json(ver_js["url"],mc_path+"\\assets\\indexes")
+    chkdir(mc_path+"\\assets\\objects")
+    obj_json = get_json(ver_js["assetIndex"]["url"],mc_path+"\\assets\\indexes/"+ver_js["id"]+".json")
+    tmp_list_obj = []
+    log.info("准备下载Objects.")
+    for everyKey in obj_json["objects"].keys():
+        tmp_list_obj.append(everyKey)
+    with alive_bar(len(tmp_list_obj),title="Download Minecraft Objects",spinner="dots_waves",bar="smooth",force_tty=True) as bar:
+        for i in range(len(tmp_list_obj)):
+            now_obj_sha1 = obj_json["objects"][tmp_list_obj[i]]["hash"]
+            now_obj_sha1_list = list(now_obj_sha1)
+            now_url = "http://resources.download.minecraft.net/"+now_obj_sha1_list[0]+now_obj_sha1_list[1]+"/"+now_obj_sha1
+            bar.text(f"Downloading object #{str(i+1)}:{now_url}")
+            chkdir(mc_path+"\\assets\\objects\\"+now_obj_sha1_list[0]+now_obj_sha1_list[1])
+            down_file(now_url,mc_path+"\\assets\\objects\\"+now_obj_sha1_list[0]+now_obj_sha1_list[1]+"/"+now_obj_sha1)
+            down_file()
+            bar()
+    log.info("成功下载所有Objects!")
+
 
 def okbtnrun():
     log.debug("run func")
@@ -155,6 +194,7 @@ def okbtnrun():
     down_verjson(minecraft_dir,vers_var.get(),"demo",True)
     now_js = js.load(open(minecraft_dir+"\\versions\\demo\\demo.json","r",encoding="utf-8"))
     log.info("debug:"+datecov_utc(now_js["releaseTime"])+"||"+now_js["type"]+"||"+now_js["id"])
+    down_objects(minecraft_dir,now_js)
 
 def ui_init():
     log.debug("run func")
@@ -177,15 +217,7 @@ def ui_init():
 
 def debug():
     log.debug("run func")
-    tmp = []
-    for everyKey in mc_js["versions"][72].keys():
-        tmp.append(everyKey)
-    log.info(tmp)
-    with alive_bar(50,title="Download Minecraft",spinner="dots_waves",bar="smooth",force_tty=True) as bar:
-        for i in range(50):
-            bar.text("Processing Work #%d"%(i+1))
-            bar()
-            time.sleep(.1)
+    log.debug("debug start:")
     for i,j,k in os.walk(runpath+"/.minecraft/versions"):
         log.info(i)
     log.debug("debug end")
@@ -193,7 +225,6 @@ def debug():
 down_verinfo()
 ui_init()
 log.info("窗口已经显示")
-log.debug("debug start:")
-debug()
+#debug()
 uipage.mainloop()
 log.info("Stopped!")
