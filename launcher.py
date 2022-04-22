@@ -64,7 +64,7 @@ minecraft_dir = runpath+"\\.minecraft"
 
 def get_json(url,file_path="notsave",mode="wb+"):
     log.debug("run func")
-     = web.get(url,headers="")
+    v = web.get(url,headers="")
     if v:
         log.info("GET "+url+" as JSON")
         if(file_path == "notsave"):
@@ -153,7 +153,7 @@ def okbtnrun():
     log.debug("run func")
     log.info("准备下载"+vers_var.get()+" JSON")
     down_verjson(minecraft_dir,vers_var.get(),"demo",True)
-    now_js = js.load(open(minecraft_dir"\\versions\\demo\\demo.json","r",encoding="utf-8"))
+    now_js = js.load(open(minecraft_dir+"\\versions\\demo\\demo.json","r",encoding="utf-8"))
     log.info("debug:"+datecov_utc(now_js["releaseTime"])+"||"+now_js["type"]+"||"+now_js["id"])
 
 def ui_init():
