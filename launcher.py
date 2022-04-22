@@ -60,6 +60,25 @@ log.addHandler(log_sh)
 log.addHandler(log_fh)
 log.info("Log Start,已启动日志记录器")
 
+minecraft_dir = runpath+"\\.minecraft"
+
+def get_json(url,file_path="notsave",mode="wb+"):
+    log.debug("run func")
+     = web.get(url,headers="")
+    if v:
+        log.info("GET "+url+" as JSON")
+        if(file_path == "notsave"):
+            return js.loads(v.text)
+        else:
+            log.info("JSON已经下载,保存在"+file_path)
+            file = open(file_path,mode)
+            file.write(v.content)
+            file.close()
+            return js.loads(v.text)
+    else:
+        log.error("Cannot GET "+url)
+        return
+
 def down_verinfo(redown=False):
     log.debug("run func")
     global mc_js
@@ -101,8 +120,8 @@ def down_verjson(minecraft_path,ver,name="~~usever~~",redown=False):
     chkdir(minecraft_path)
     chkdir(minecraft_path+"\\versions")
     if(os.path.exists(minecraft_path+"\\versions\\"+ver) == False or redown):
-        chkdir(minecraft_path+"\\versions\\"+ver,True)
-        chkdir(minecraft_path+"\\versions\\"+ver,False,True)
+        chkdir(minecraft_path+"\\versions\\"+name,True)
+        chkdir(minecraft_path+"\\versions\\"+name,False,True)
         for i in range(len(mc_js["versions"])):
             if(mc_js["versions"][i]["id"] == ver):
                 break
@@ -124,13 +143,21 @@ def down_verjson(minecraft_path,ver,name="~~usever~~",redown=False):
         log.debug("redown json mode:"+str(redown))
         return 2
 
+def down_objects(mc_path,ver_js):
+    log.debug("run func")
+    chkdir(mc_path+"\\assets")
+    chkdir(mc_path+"\\assets\\indexes")
+    obj_json = get_json(ver_js["url"],mc_path+"\\assets\\indexes")
+
 def okbtnrun():
+    log.debug("run func")
     log.info("准备下载"+vers_var.get()+" JSON")
-    down_verjson(runpath+"\\.minecraft",vers_var.get(),"demo",True)
-    now_js = js.load(open(runpath+"\\.minecraft\\versions\\demo\\version.json","r",encoding="utf-8"))
+    down_verjson(minecraft_dir,vers_var.get(),"demo",True)
+    now_js = js.load(open(minecraft_dir"\\versions\\demo\\demo.json","r",encoding="utf-8"))
     log.info("debug:"+datecov_utc(now_js["releaseTime"])+"||"+now_js["type"]+"||"+now_js["id"])
 
 def ui_init():
+    log.debug("run func")
     i=0
     log.info("开始初始化GUI")
     global uipage,vers,okbtn,vers_var
@@ -149,6 +176,7 @@ def ui_init():
     okbtn.grid(column=0,row=4)
 
 def debug():
+    log.debug("run func")
     tmp = []
     for everyKey in mc_js["versions"][72].keys():
         tmp.append(everyKey)
@@ -158,6 +186,8 @@ def debug():
             bar.text("Processing Work #%d"%(i+1))
             bar()
             time.sleep(.1)
+    for i,j,k in os.walk(runpath+"/.minecraft/versions"):
+        log.info(i)
     log.debug("debug end")
 
 down_verinfo()

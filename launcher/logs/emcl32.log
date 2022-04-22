@@ -1,37 +1,58 @@
-[2022/04/21 20:59:43] [launcher.py-<module>] INFO > Log Start,已启动日志记录器
-[2022/04/21 20:59:43] [launcher.py-down_verinfo] INFO > 已加载Minecraft版本信息表.
-[2022/04/21 20:59:43] [launcher.py-ui_init] INFO > 开始初始化GUI
-[2022/04/21 20:59:43] [launcher.py-<module>] INFO > 窗口已经显示
-[2022/04/21 21:00:32] [launcher.py-<module>] INFO > Log Start,已启动日志记录器
-[2022/04/21 21:00:32] [launcher.py-down_verinfo] INFO > 已加载Minecraft版本信息表.
-[2022/04/21 21:00:32] [launcher.py-ui_init] INFO > 开始初始化GUI
-[2022/04/21 21:00:32] [launcher.py-<module>] INFO > 窗口已经显示
-[2022/04/21 21:00:48] [launcher.py-okbtnrun] INFO > 准备下载1.16.5 JSON
-[2022/04/21 21:00:48] [launcher.py-down_verjson] INFO > .minecraft目录:G:\emcl\.minecraft
-[2022/04/21 21:00:48] [launcher.py-down_verjson] INFO > 删除目录:G:\emcl\.minecraft\versionsdemo
-[2022/04/21 21:00:57] [launcher.py-<module>] INFO > Stopped!
-[2022/04/21 21:38:01] [launcher.py-<module>] INFO > Log Start,已启动日志记录器
-[2022/04/21 21:38:01] [launcher.py-down_verinfo] INFO > 已加载Minecraft版本信息表.
-[2022/04/21 21:38:01] [launcher.py-ui_init] INFO > 开始初始化GUI
-[2022/04/21 21:38:01] [launcher.py-<module>] INFO > 窗口已经显示
-[2022/04/21 21:51:36] [launcher.py-okbtnrun] INFO > 准备下载1.16.5 JSON
-[2022/04/21 21:51:36] [launcher.py-down_verjson] INFO > .minecraft目录:G:\emcl\.minecraft
-[2022/04/21 21:51:36] [launcher.py-down_verjson] INFO > 删除目录:G:\emcl\.minecraft\versions1.16.5
-[2022/04/21 22:02:48] [launcher.py-<module>] INFO > Log Start,已启动日志记录器
-[2022/04/21 22:02:48] [launcher.py-down_verinfo] INFO > 已加载Minecraft版本信息表.
-[2022/04/21 22:02:48] [launcher.py-ui_init] INFO > 开始初始化GUI
-[2022/04/21 22:02:48] [launcher.py-<module>] INFO > 窗口已经显示
-[2022/04/21 22:02:48] [launcher.py-debug] INFO > ['id', 'type', 'url', 'time', 'releaseTime']
-[2022/04/21 22:03:41] [launcher.py-okbtnrun] INFO > 准备下载1.16.5 JSON
-[2022/04/21 22:03:41] [launcher.py-down_verjson] INFO > .minecraft目录:G:\emcl\.minecraft
-[2022/04/21 22:03:41] [launcher.py-chkdir] WARNING > 存在目录:G:\emcl\.minecraft\versions\1.16.5
-[2022/04/21 22:04:43] [launcher.py-<module>] INFO > Log Start,已启动日志记录器
-[2022/04/21 22:04:43] [launcher.py-down_verinfo] INFO > 已加载Minecraft版本信息表.
-[2022/04/21 22:04:43] [launcher.py-ui_init] INFO > 开始初始化GUI
-[2022/04/21 22:04:44] [launcher.py-<module>] INFO > 窗口已经显示
-[2022/04/21 22:04:44] [launcher.py-debug] INFO > ['id', 'type', 'url', 'time', 'releaseTime']
-[2022/04/21 22:04:54] [launcher.py-okbtnrun] INFO > 准备下载1.16.5 JSON
-[2022/04/21 22:04:54] [launcher.py-down_verjson] INFO > .minecraft目录:G:\emcl\.minecraft
-[2022/04/21 22:04:54] [launcher.py-chkdir] WARNING > 没有目录:G:\emcl\.minecraft\versions\1.16.5
-[2022/04/21 22:04:54] [launcher.py-chkdir] INFO > 创建目录:G:\emcl\.minecraft\versions\1.16.5
-[2022/04/21 22:41:56] [launcher.py-<module>] INFO > Stopped!
+[2022/04/22 15:44:43] [launcher.py-<module>] INFO > Log Start,已启动日志记录器
+[2022/04/22 15:44:43] [launcher.py-down_verinfo] INFO > 已加载Minecraft版本信息表.
+[2022/04/22 15:44:43] [launcher.py-ui_init] INFO > 开始初始化GUI
+[2022/04/22 15:44:43] [launcher.py-<module>] INFO > 窗口已经显示
+[2022/04/22 15:44:44] [launcher.py-debug] INFO > ['id', 'type', 'url', 'time', 'releaseTime']
+[2022/04/22 15:45:01] [launcher.py-<module>] INFO > Stopped!
+[2022/04/22 16:02:51] [launcher.py-<module>] INFO > Log Start,已启动日志记录器
+[2022/04/22 16:02:51] [launcher.py-down_verinfo] INFO > 已加载Minecraft版本信息表.
+[2022/04/22 16:02:51] [launcher.py-ui_init] INFO > 开始初始化GUI
+[2022/04/22 16:02:51] [launcher.py-<module>] INFO > 窗口已经显示
+[2022/04/22 16:02:51] [launcher.py-debug] INFO > ['id', 'type', 'url', 'time', 'releaseTime']
+[2022/04/22 16:02:56] [launcher.py-debug] INFO > G:\emcl/.minecraft/versions
+[2022/04/22 16:02:56] [launcher.py-debug] INFO > G:\emcl/.minecraft/versions\1.16.5
+[2022/04/22 16:03:01] [launcher.py-okbtnrun] INFO > 准备下载1.16.5 JSON
+[2022/04/22 16:03:01] [launcher.py-down_verjson] INFO > .minecraft目录:G:\emcl\.minecraft
+[2022/04/22 16:03:01] [launcher.py-chkdir] WARNING > 存在目录:G:\emcl\.minecraft\versions\1.16.5
+[2022/04/22 16:03:01] [launcher.py-chkdir] INFO > 删除目录:G:\emcl\.minecraft\versions\1.16.5
+[2022/04/22 16:03:01] [launcher.py-chkdir] WARNING > 没有目录:G:\emcl\.minecraft\versions\1.16.5
+[2022/04/22 16:03:01] [launcher.py-chkdir] INFO > 创建目录:G:\emcl\.minecraft\versions\1.16.5
+[2022/04/22 16:03:36] [launcher.py-<module>] INFO > Stopped!
+[2022/04/22 16:03:40] [launcher.py-<module>] INFO > Log Start,已启动日志记录器
+[2022/04/22 16:03:40] [launcher.py-down_verinfo] INFO > 已加载Minecraft版本信息表.
+[2022/04/22 16:03:40] [launcher.py-ui_init] INFO > 开始初始化GUI
+[2022/04/22 16:03:40] [launcher.py-<module>] INFO > 窗口已经显示
+[2022/04/22 16:03:40] [launcher.py-debug] INFO > ['id', 'type', 'url', 'time', 'releaseTime']
+[2022/04/22 16:03:45] [launcher.py-debug] INFO > G:\emcl/.minecraft/versions
+[2022/04/22 16:03:45] [launcher.py-debug] INFO > G:\emcl/.minecraft/versions\1.16.5
+[2022/04/22 16:03:50] [launcher.py-okbtnrun] INFO > 准备下载1.16.5 JSON
+[2022/04/22 16:03:50] [launcher.py-down_verjson] INFO > .minecraft目录:G:\emcl\.minecraft
+[2022/04/22 16:03:50] [launcher.py-chkdir] WARNING > 没有目录:G:\emcl\.minecraft\versions\demo
+[2022/04/22 16:03:50] [launcher.py-chkdir] INFO > 创建目录:G:\emcl\.minecraft\versions\demo
+[2022/04/22 16:03:50] [launcher.py-down_verjson] INFO > 已下载 1.16.5demo JSON,保存在 G:\emcl\.minecraft\versions\demo\demo.json!
+[2022/04/22 16:04:39] [launcher.py-<module>] INFO > Stopped!
+[2022/04/22 16:04:49] [launcher.py-<module>] INFO > Log Start,已启动日志记录器
+[2022/04/22 16:04:49] [launcher.py-down_verinfo] INFO > 已加载Minecraft版本信息表.
+[2022/04/22 16:04:49] [launcher.py-ui_init] INFO > 开始初始化GUI
+[2022/04/22 16:04:49] [launcher.py-<module>] INFO > 窗口已经显示
+[2022/04/22 16:04:49] [launcher.py-debug] INFO > ['id', 'type', 'url', 'time', 'releaseTime']
+[2022/04/22 16:04:55] [launcher.py-debug] INFO > G:\emcl/.minecraft/versions
+[2022/04/22 16:04:55] [launcher.py-debug] INFO > G:\emcl/.minecraft/versions\demo
+[2022/04/22 16:05:00] [launcher.py-okbtnrun] INFO > 准备下载1.16.5 JSON
+[2022/04/22 16:05:00] [launcher.py-down_verjson] INFO > .minecraft目录:G:\emcl\.minecraft
+[2022/04/22 16:05:00] [launcher.py-chkdir] WARNING > 存在目录:G:\emcl\.minecraft\versions\demo
+[2022/04/22 16:05:00] [launcher.py-chkdir] INFO > 删除目录:G:\emcl\.minecraft\versions\demo
+[2022/04/22 16:05:00] [launcher.py-chkdir] WARNING > 没有目录:G:\emcl\.minecraft\versions\demo
+[2022/04/22 16:05:00] [launcher.py-chkdir] INFO > 创建目录:G:\emcl\.minecraft\versions\demo
+[2022/04/22 16:05:03] [launcher.py-down_verjson] INFO > 已下载 1.16.5demo JSON,保存在 G:\emcl\.minecraft\versions\demo\demo.json!
+[2022/04/22 16:05:03] [launcher.py-datecov_utc] INFO > 转换时间(+00:00): 2021-01-14T16:05:32+00:00
+[2022/04/22 16:05:03] [launcher.py-okbtnrun] INFO > debug:2021/01/15 00:05:32||release||1.16.5
+[2022/04/22 16:06:57] [launcher.py-<module>] INFO > Stopped!
+[2022/04/22 16:07:01] [launcher.py-<module>] INFO > Log Start,已启动日志记录器
+[2022/04/22 16:07:01] [launcher.py-down_verinfo] INFO > 已加载Minecraft版本信息表.
+[2022/04/22 16:07:01] [launcher.py-ui_init] INFO > 开始初始化GUI
+[2022/04/22 16:07:01] [launcher.py-<module>] INFO > 窗口已经显示
+[2022/04/22 16:07:01] [launcher.py-debug] INFO > ['id', 'type', 'url', 'time', 'releaseTime']
+[2022/04/22 16:07:06] [launcher.py-debug] INFO > G:\emcl/.minecraft/versions
+[2022/04/22 16:07:06] [launcher.py-debug] INFO > G:\emcl/.minecraft/versions\demo
+[2022/04/22 16:07:06] [launcher.py-debug] INFO > G:\emcl/.minecraft/versions\demo\test
