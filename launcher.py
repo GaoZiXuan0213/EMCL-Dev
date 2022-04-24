@@ -24,6 +24,7 @@ def chkdir(dir,isRM=False,onlyCR=False,LogOutput=True):
         else:
             if((os.path.exists(dir) == False) and not isRM):
                 log.warning("没有目录:"+dir)
+                log.info(str(os.path.exists(dir)))
                 os.makedirs(dir)
                 log.info("创建目录:"+dir)
                 return
@@ -151,40 +152,59 @@ def down_verjson(minecraft_path,ver,name="~~usever~~",redown=False):
         return 2
 
 class DownloadThread (threading.Thread):
-    def __init__(self,threadID,name,url,path,mode="wb+"):
+    def __init__(self,threadID,name,url,path,filename,mode="wb+"):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.name = name
         self.url = url
         self.path = path
+        self.filename = filename
         self.mode = mode
         log.info(f"下载线程已设置#{str(self.threadID)}: {self.name}")
     def run(self):
+        global down_tmp_times,down_obj_start
         log.info(f"启动下载线程#{str(self.threadID)}: {self.name}")
-        down_file(self.url,self.path,self.mode)
-        log.info(f"启动下载线程#{str(self.threadID)}: {self.name}")
+        while True:
+            time.sleep(20)
+            if(down_obj_start):
+                chkdir(self.path)
+                down_file(self.url,self.path+self.filename,self.mode)
+                log.info(f"关闭下载线程#{str(self.threadID)}: {self.name}")
+                down_tmp_times = down_tmp_times + 1
+                break
 
 def down_objects(mc_path,ver_js):
+    global down_tmp_times,down_obj_start
+    down_tmp_times = 0
     i = 0
+    ThreadNum = 64
+    down_obj_start = False
     log.debug("run func")
     chkdir(mc_path+"\\assets")
     chkdir(mc_path+"\\assets\\indexes")
     chkdir(mc_path+"\\assets\\objects")
     obj_json = get_json(ver_js["assetIndex"]["url"],mc_path+"\\assets\\indexes/"+ver_js["id"]+".json")
     tmp_list_obj = []
+    tmp_thread = []
     log.info("准备下载Objects.")
     for everyKey in obj_json["objects"].keys():
         tmp_list_obj.append(everyKey)
-    with alive_bar(len(tmp_list_obj),title="Download Minecraft Objects",spinner="dots_waves",bar="smooth",force_tty=True) as bar:
-        for i in range(len(tmp_list_obj)):
-            now_obj_sha1 = obj_json["objects"][tmp_list_obj[i]]["hash"]
-            now_obj_sha1_list = list(now_obj_sha1)
-            now_url = "http://resources.download.minecraft.net/"+now_obj_sha1_list[0]+now_obj_sha1_list[1]+"/"+now_obj_sha1
-            bar.text(f"Downloading object #{str(i+1)}:{now_url}")
-            chkdir(mc_path+"\\assets\\objects\\"+now_obj_sha1_list[0]+now_obj_sha1_list[1])
-            down_file(now_url,mc_path+"\\assets\\objects\\"+now_obj_sha1_list[0]+now_obj_sha1_list[1]+"/"+now_obj_sha1)
-            down_file()
-            bar()
+    with alive_bar(title="Download Minecraft Objects",spinner="dots_waves",bar="smooth",force_tty=True) as bar:
+        while True:
+            if(i==0):
+                bar.text("Creating Download Threads")
+                for j in range(len(tmp_list_obj)):
+                    now_obj_sha1 = obj_json["objects"][tmp_list_obj[j]]["hash"]
+                    now_obj_sha1_list = list(now_obj_sha1)
+                    now_url = "http://resources.download.minecraft.net/"+now_obj_sha1_list[0]+now_obj_sha1_list[1]+"/"+now_obj_sha1
+                    tmp_thread.append(DownloadThread(j,"DL-Obj"+str(j),now_url,mc_path+"\\assets\\objects\\"+now_obj_sha1_list[0]+now_obj_sha1_list[1]+"\\",now_obj_sha1))
+                i=1
+                for j in range(len(tmp_thread)):
+                    tmp_thread[j].start()
+                down_obj_start = True
+            bar.text(f"Downloading object #{str(down_tmp_times)}")
+            if(down_tmp_times==len(tmp_list_obj)):
+                break
     log.info("成功下载所有Objects!")
 
 
