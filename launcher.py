@@ -1,13 +1,33 @@
-from ensurepip import version
+from cProfile import run
 from tkinter import *
 import json as js
-import os,sys,logging,datetime,time,shutil,hashlib,threading
+import os,sys,logging,datetime,time,shutil,hashlib,threading,platform
 import requests as web
 from logging import handlers
 import tkinter.ttk as ttk
 from alive_progress import alive_bar
 
 LOGS_LEVEL = logging.DEBUG
+USE_MIRROR = "s" # BMCLAPI = "b" MCBBS = "s" Minecraft.net = "o"
+
+############################################################
+if(USE_MIRROR == "b"):
+    mcurlinfo_object = "http://bmclapi2.bangbang93.com/assets/"
+    mcurlinfo_main_file = "http://bmclapi2.bangbang93.com/"
+    mcurlinfo_verindex = "http://bmclapi2.bangbang93.com/mc/game/version_manifest.json"
+elif(USE_MIRROR == "o"):
+    mcurlinfo_object = "http://resources.download.minecraft.net/"
+    mcurlinfo_verindex = "http://launchermeta.mojang.com/mc/game/version_manifest.json"
+    mcurlinfo_main_file = "http://launcher.mojang.com/"
+elif(USE_MIRROR == "s"):
+    mcurlinfo_object = "http://download.mcbbs.net/assets/"
+    mcurlinfo_verindex = "http://download.mcbbs.net/mc/game/version_manifest.json"
+    mcurlinfo_main_file = "http://download.mcbbs.net/"
+else:
+    print("Failed to read mirror list,use MCBBS mirror.")
+    mcurlinfo_object = "http://download.mcbbs.net/assets/"
+    mcurlinfo_verindex = "http://download.mcbbs.net/mc/game/version_manifest.json"
+    mcurlinfo_main_file = "http://download.mcbbs.net/"
 
 def chkdir(dir,isRM=False,onlyCR=False,LogOutput=True):
     if LogOutput:
@@ -24,9 +44,12 @@ def chkdir(dir,isRM=False,onlyCR=False,LogOutput=True):
         else:
             if((os.path.exists(dir) == False) and not isRM):
                 log.warning("没有目录:"+dir)
-                log.info(str(os.path.exists(dir)))
-                os.makedirs(dir)
-                log.info("创建目录:"+dir)
+                try:
+                    os.makedirs(dir)
+                except FileExistsError:
+                    log.error("线程同时创建文件夹或文件夹已存在:"+dir)
+                else:
+                    log.info("创建目录:"+dir)
                 return
             if((os.path.exists(dir) == True) and isRM):
                 log.warning("存在目录:"+dir)
@@ -65,21 +88,26 @@ minecraft_dir = runpath+"\\.minecraft"
 
 def sha1(file_path):
     with open(file_path,'rb') as f:
-        hash = hashlib.sha1().update(f.read()).hexdigest()
+        hash = hashlib.sha1(f.read()).hexdigest()
         log.info("计算了sha1:"+hash)
         return hash
 
 def down_file(url,file_path,mode="wb+"):
     f = open(file_path,mode)
-    v = web.get(url,headers="")
-    if v:
-        log.info("下载:"+url)
-        f.write(v.content)
-        f.close()
-        return 0
+    try:
+        v = web.get(url,headers="")
+    except web.exceptions.ConnectionError:
+        log.warning("Failed to download "+url+" as "+file_path+" now will try again.")
+        down_file(url,file_path,mode)
     else:
-        log.warning("无法下载:"+url)
-        return 1
+        if v:
+            log.info("下载:"+url)
+            f.write(v.content)
+            f.close()
+            return 0
+        else:
+            log.warning("无法下载:"+url)
+            return 1
 
 def get_json(url,file_path="notsave",mode="wb+"):
     log.debug("run func")
@@ -98,16 +126,21 @@ def get_json(url,file_path="notsave",mode="wb+"):
         log.error("Cannot GET "+url)
         return
 
+def write_json(path,jsondict,mode="wb+"):
+    with open(path,mode) as f:
+        log.info("写入JSON"+path)
+        js.dump(jsondict,f)
+
 def down_verinfo(redown=False):
     log.debug("run func")
     global mc_js
     if redown:
         log.info("下载Minecraft版本信息表中...")
-        if(get_json("https://launchermeta.mojang.com/mc/game/version_manifest.json",runpath+"\\launcher/version.json")):
+        if(get_json(mcurlinfo_verindex,runpath+"\\launcher/version.json")):
             log.info("已下载Minecraft版本信息表,保存在 \\launcher\\version.json!")
             return 0
         else:
-            log.error("无法连接至launchermeta.mojang.com!")
+            log.error("无法连接至"+mcurlinfo_verindex+"!")
             return 1
     else:
         if(os.path.exists(runpath+"\\launcher/version.json") == False):
@@ -152,33 +185,29 @@ def down_verjson(minecraft_path,ver,name="~~usever~~",redown=False):
         return 2
 
 class DownloadThread (threading.Thread):
-    def __init__(self,threadID,name,url,path,filename,mode="wb+"):
+    def __init__(self,threadID,name,urllist,mode="wb+"):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.name = name
-        self.url = url
-        self.path = path
-        self.filename = filename
+        self.urllist = urllist
         self.mode = mode
         log.info(f"下载线程已设置#{str(self.threadID)}: {self.name}")
     def run(self):
-        global down_tmp_times,down_obj_start
+        global down_tmp_times
         log.info(f"启动下载线程#{str(self.threadID)}: {self.name}")
-        while True:
-            time.sleep(20)
-            if(down_obj_start):
-                chkdir(self.path)
-                down_file(self.url,self.path+self.filename,self.mode)
-                log.info(f"关闭下载线程#{str(self.threadID)}: {self.name}")
-                down_tmp_times = down_tmp_times + 1
-                break
+        time.sleep(2)
+        for i in range(len(self.urllist)):
+            down_file(self.urllist[i][0],self.urllist[i][1],self.mode)
+            shutil.copyfile(self.urllist[i][1],self.urllist[i][2])
+            down_tmp_times += 1
+        log.info(f"关闭下载线程#{str(self.threadID)}: {self.name}")
 
 def down_objects(mc_path,ver_js):
-    global down_tmp_times,down_obj_start
+    global down_tmp_times
     down_tmp_times = 0
     i = 0
-    ThreadNum = 64
-    down_obj_start = False
+    ThreadNum = 512
+    #web.adapters.DEFAULT_RETRIES = ThreadNum // 1.25
     log.debug("run func")
     chkdir(mc_path+"\\assets")
     chkdir(mc_path+"\\assets\\indexes")
@@ -186,35 +215,140 @@ def down_objects(mc_path,ver_js):
     obj_json = get_json(ver_js["assetIndex"]["url"],mc_path+"\\assets\\indexes/"+ver_js["id"]+".json")
     tmp_list_obj = []
     tmp_thread = []
+    tmp_urllist = []
+    tmp_copydir = ""
     log.info("准备下载Objects.")
     for everyKey in obj_json["objects"].keys():
         tmp_list_obj.append(everyKey)
-    with alive_bar(title="Download Minecraft Objects",spinner="dots_waves",bar="smooth",force_tty=True) as bar:
+    now_keys = 0
+    with alive_bar(len(tmp_list_obj)+ThreadNum-1,title="Download Minecraft Objects",spinner="dots_waves",bar="smooth",force_tty=True) as bar:
         while True:
             if(i==0):
                 bar.text("Creating Download Threads")
-                for j in range(len(tmp_list_obj)):
-                    now_obj_sha1 = obj_json["objects"][tmp_list_obj[j]]["hash"]
-                    now_obj_sha1_list = list(now_obj_sha1)
-                    now_url = "http://resources.download.minecraft.net/"+now_obj_sha1_list[0]+now_obj_sha1_list[1]+"/"+now_obj_sha1
-                    tmp_thread.append(DownloadThread(j,"DL-Obj"+str(j),now_url,mc_path+"\\assets\\objects\\"+now_obj_sha1_list[0]+now_obj_sha1_list[1]+"\\",now_obj_sha1))
-                i=1
-                for j in range(len(tmp_thread)):
+                chkdir(mc_path+"\\assets\\")
+                chkdir(mc_path+"\\assets\\virtual\\")
+                chkdir(mc_path+"\\assets\\virtual\\legacy\\")
+                for k in range(ThreadNum):
+                    rangetimes = len(tmp_list_obj)//(ThreadNum-1)
+                    if(k==ThreadNum-1):
+                        rangetimes = len(tmp_list_obj)%(ThreadNum-1)
+                    for j in range(rangetimes):
+                        now_obj_sha1 = obj_json["objects"][tmp_list_obj[j]]["hash"]
+                        now_obj_sha1_list = list(now_obj_sha1)
+                        now_url = mcurlinfo_object+now_obj_sha1_list[0]+now_obj_sha1_list[1]+"/"+now_obj_sha1
+                        tmp_urllist.append([now_url,mc_path+"\\assets\\objects\\"+now_obj_sha1_list[0]+now_obj_sha1_list[1]+"\\"+now_obj_sha1,mc_path+"\\assets\\virtual\\legacy\\"+tmp_list_obj[j]])
+                        chkdir(mc_path+"\\assets\\objects\\"+now_obj_sha1_list[0]+now_obj_sha1_list[1]+"\\")
+                        for l in range(len(tmp_list_obj[j].split("/"))-1):
+                            tmp_copydir += tmp_list_obj[j].split("/")[l]+"\\"
+                        chkdir(mc_path+"\\assets\\virtual\\legacy\\"+tmp_copydir)
+                        tmp_copydir = ""
+                    tmp_thread.append(DownloadThread(k,"OBJ-DL"+str(k),tmp_urllist))
+                    tmp_urllist = []
+                i = 1
+                for j in range(ThreadNum):
                     tmp_thread[j].start()
-                down_obj_start = True
-            bar.text(f"Downloading object #{str(down_tmp_times)}")
+                    bar()
+            if(down_tmp_times > now_keys):
+                bar()
+                now_keys += 1
+            bar.text(f"Downloading object #{str(down_tmp_times)} All:{len(tmp_list_obj)}")
             if(down_tmp_times==len(tmp_list_obj)):
                 break
     log.info("成功下载所有Objects!")
 
+def search_version(ver_dir):
+    out = []
+    for i in os.listdir(ver_dir):
+        if(os.path.isdir(i)):
+            out.append(i)
+    return out
+
+def check_rules(rule_js,options):
+    return_ok = False
+    if(rule_js[0]["allow"]=="allow"):
+        return_ok = True
+    elif(rule_js[0]["allow"]=="disallow"):
+        return_ok = False
+        
+
+def down_main_jar(now_js,mc_path,name,client=True):
+    log.info("正在下载主JAR,大约1~10秒,请耐心等待!")
+    down_type = "server"
+    if(client):
+        down_type = "client"
+    for i in search_version(mc_path+"//versions//"):
+        if(i==name):
+            log.info("找到版本!")
+            break
+        if(i==search_version(mc_path+"//versions//")[len(search_version(mc_path+"//versions//"))-1]):
+            log.error("无法找到版本!")
+            return 1
+    down_url_tmp = mcurlinfo_main_file + now_js["downloads"][down_type]["url"].split("https://launcher.mojang.com/")[1]
+    down_file(down_url_tmp,mc_path+"//versions//"+name+"//"+name+".jar")
+    if(sha1(mc_path+"//versions//"+name+"//"+name+".jar")==now_js["downloads"][down_type]["sha1"]):
+        log.info("成功下载主要JAR包!已经效验SHA1!")
+        return 0
+    else:
+        log.error("无法效验JAR SHA1!")
+        return 1
+
+def down_libraries(now_js,mc_path,name):
+        for count, i in enumerate(now_js["libraries"]):
+        if not parse_rule_list(i, "rules", {}):
+            continue
+        # Turn the name into a path
+        currentPath = os.path.join(path, "libraries")
+        if "url" in i:
+            if i["url"].endswith("/"):
+                downloadUrl = i["url"][:-1]
+            else:
+                downloadUrl = i["url"]
+        else:
+            downloadUrl = "https://libraries.minecraft.net"
+        try:
+            libPath, name, version = i["name"].split(":")[0:3]
+        except ValueError:
+            continue
+        for libPart in libPath.split("."):
+            currentPath = os.path.join(currentPath, libPart)
+            downloadUrl = downloadUrl + "/" + libPart
+        try:
+            version, fileend = version.split("@")
+        except ValueError:
+            fileend = "jar"
+        jarFilename = name + "-" + version + "." + fileend
+        downloadUrl = downloadUrl + "/" + name + "/" + version
+        currentPath = os.path.join(currentPath, name, version)
+        native = get_natives(i)
+        # Check if there is a native file
+        if native != "":
+            jarFilenameNative = name + "-" + version + "-" + native + ".jar"
+        jarFilename = name + "-" + version + "." + fileend
+        downloadUrl = downloadUrl + "/" + jarFilename
+        # Try to download the lib
+        try:
+            download_file(downloadUrl, os.path.join(currentPath, jarFilename), callback)
+        except Exception:
+            pass
+        if "downloads" not in i:
+            if "extract" in i:
+                extract_natives_file(os.path.join(currentPath, jarFilenameNative), os.path.join(path, "versions", data["id"], "natives"), i["extract"])
+            continue
+        if "artifact" in i["downloads"]:
+            download_file(i["downloads"]["artifact"]["url"], os.path.join(path, "libraries", i["downloads"]["artifact"]["path"]), callback, sha1=i["downloads"]["artifact"]["sha1"])
+        if native != "":
+            download_file(i["downloads"]["classifiers"][native]["url"], os.path.join(currentPath, jarFilenameNative), callback, sha1=i["downloads"]["classifiers"][native]["sha1"])
+            if "extract" in i:
+                extract_natives_file(os.path.join(currentPath, jarFilenameNative), os.path.join(path, "versions", data["id"], "natives"), i["extract"])
 
 def okbtnrun():
     log.debug("run func")
     log.info("准备下载"+vers_var.get()+" JSON")
-    down_verjson(minecraft_dir,vers_var.get(),"demo",True)
+    down_verjson(minecraft_dir,vers_var.get(),"demo")
     now_js = js.load(open(minecraft_dir+"\\versions\\demo\\demo.json","r",encoding="utf-8"))
     log.info("debug:"+datecov_utc(now_js["releaseTime"])+"||"+now_js["type"]+"||"+now_js["id"])
-    down_objects(minecraft_dir,now_js)
+    #down_objects(minecraft_dir,now_js)
+    down_main_jar(now_js,minecraft_dir,"demo",True)
 
 def ui_init():
     log.debug("run func")
@@ -231,9 +365,10 @@ def ui_init():
         temp.append(mc_js["versions"][i]["id"])
     vers["value"] = tuple(temp)
     okbtn = Button(uipage,text="Downlaod JSON",command=okbtnrun)
-    vers.current(72)
+    vers.current(74)
     vers.grid(column=0,row=0)
     okbtn.grid(column=0,row=4)
+    okbtnrun()
 
 def debug():
     log.debug("run func")
@@ -246,5 +381,5 @@ down_verinfo()
 ui_init()
 log.info("窗口已经显示")
 #debug()
-uipage.mainloop()
+#uipage.mainloop()
 log.info("Stopped!")
