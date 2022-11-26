@@ -1,0 +1,5 @@
+[2022/06/21 21:24:02] [launcher.py-<module>] INFO > Log Start,已启动日志记录器
+[2022/06/21 21:24:02] [launcher.py-down_verinfo] INFO > 已加载Minecraft版本信息表.
+[2022/06/21 21:24:02] [launcher.py-ui_init] INFO > 开始初始化GUI
+[2022/06/21 21:24:02] [launcher.py-<module>] INFO > 窗口已经显示
+[2022/06/21 21:24:04] [launcher.py-<module>] INFO > Stopped!

@@ -1,0 +1,26 @@
+[2022/04/30 15:27:53] [launcher.py-<module>] INFO > Log Start,已启动日志记录器
+[2022/04/30 15:27:53] [launcher.py-down_verinfo] INFO > 已加载Minecraft版本信息表.
+[2022/04/30 15:27:53] [launcher.py-ui_init] INFO > 开始初始化GUI
+[2022/04/30 15:27:53] [launcher.py-<module>] INFO > 窗口已经显示
+[2022/04/30 15:27:53] [launcher.py-<module>] INFO > Stopped!
+[2022/04/30 15:28:03] [launcher.py-<module>] INFO > Log Start,已启动日志记录器
+[2022/04/30 15:28:03] [launcher.py-down_verinfo] INFO > 已加载Minecraft版本信息表.
+[2022/04/30 15:28:03] [launcher.py-ui_init] INFO > 开始初始化GUI
+[2022/04/30 15:28:03] [launcher.py-<module>] INFO > 窗口已经显示
+[2022/04/30 15:28:13] [launcher.py-okbtnrun] INFO > 准备下载rd-132328 JSON
+[2022/04/30 15:28:13] [launcher.py-down_verjson] INFO > .minecraft目录:G:\emcl\.minecraft
+[2022/04/30 15:28:13] [launcher.py-chkdir] WARNING > 没有目录:G:\emcl\.minecraft\versions\test
+[2022/04/30 15:28:13] [launcher.py-chkdir] INFO > 创建目录:G:\emcl\.minecraft\versions\test
+[2022/04/30 15:28:15] [launcher.py-get_json] INFO > GET https://launchermeta.mojang.com/v1/packages/4ec49ff663f96e78a5cf0d9538adb9d1358fc485/rd-132328.json as JSON
+[2022/04/30 15:28:15] [launcher.py-get_json] INFO > JSON已经下载,保存在G:\emcl\.minecraft\versions\test\test.json
+[2022/04/30 15:28:15] [launcher.py-down_verjson] INFO > 已下载 rd-132328test JSON,保存在 G:\emcl\.minecraft\versions\test\test.json!
+[2022/04/30 15:28:15] [launcher.py-datecov_utc] INFO > 转换时间(+00:00): 2021-01-14T16:05:32+00:00
+[2022/04/30 15:28:15] [launcher.py-okbtnrun] INFO > debug:2021/01/15 00:05:32||release||1.16.5
+[2022/04/30 15:28:15] [launcher.py-down_main_jar] INFO > 正在下载主JAR,大约1~10秒,请耐心等待!
+[2022/04/30 15:28:15] [launcher.py-down_file] INFO > 下载:http://download.mcbbs.net/v1/objects/37fd3c903861eeff3bc24b71eed48f828b5269c8/client.jar
+[2022/04/30 15:28:15] [launcher.py-sha1] INFO > 计算了sha1:37fd3c903861eeff3bc24b71eed48f828b5269c8
+[2022/04/30 15:28:15] [launcher.py-down_main_jar] INFO > 成功下载主要JAR包!已经效验SHA1!
+[2022/04/30 15:28:42] [launcher.py-<module>] INFO > Log Start,已启动日志记录器
+[2022/04/30 15:28:42] [launcher.py-down_verinfo] INFO > 已加载Minecraft版本信息表.
+[2022/04/30 15:28:42] [launcher.py-ui_init] INFO > 开始初始化GUI
+[2022/04/30 15:28:42] [launcher.py-<module>] INFO > 窗口已经显示
