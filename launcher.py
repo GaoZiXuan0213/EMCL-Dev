@@ -1,4 +1,3 @@
-from linecache import checkcache
 from tkinter import *
 import json as js
 import os
@@ -16,8 +15,9 @@ import requests as web
 from logging import handlers
 import tkinter.ttk as ttk
 from alive_progress import alive_bar
+from tqdm import tqdm
 
-LOGS_LEVEL = logging.DEBUG
+LOGS_LEVEL = logging.INFO
 USE_MIRROR = "s" # BMCLAPI = "b" MCBBS = "s" Minecraft.net = "o"
 
 ############################################################
@@ -42,7 +42,6 @@ else:
 	mcurlinfo_verindex = "http://download.mcbbs.net/mc/game/version_manifest.json"
 	mcurlinfo_main_file = "http://download.mcbbs.net/"
 	mcurlinfo_libraries = "http://download.mcbbs.net/maven"
-
 def chkdir(dir,isRM=False,onlyCR=False,LogOutput=True):
 	if LogOutput:
 		if onlyCR:
@@ -81,22 +80,30 @@ def chkdir(dir,isRM=False,onlyCR=False,LogOutput=True):
 			if((os.path.exists(dir) == True) and isRM):
 				shutil.rmtree(dir)
 
-
-runpath = os.path.split(os.path.realpath(sys.argv[0]))[0]
+runpath = os.path.split(os.path.realpath(sys.argv[0]))[0] + "\\..\\emcl-data"
 chkdir(runpath+"\\launcher",False,False,False)
+chkdir(runpath+"\\launcher\\java",False,False,False)
 chkdir(runpath+"\\launcher\\logs",False,False,False)
 log = logging.getLogger("log")
 log_sh = logging.StreamHandler()
 log_fh = handlers.TimedRotatingFileHandler(runpath+"\\launcher\\logs/emcl32.log",when="h",encoding="utf-8")
 log.setLevel(LOGS_LEVEL)
-log_fh.setLevel(logging.INFO)
-log_format = logging.Formatter(fmt="[%(asctime)s] [%(filename)s-%(funcName)s] %(levelname)s > %(message)s",datefmt="%Y/%m/%d %X")
+log_fh.setLevel(logging.DEBUG)
+# %Y/%m/%d %X
+log_format = logging.Formatter(fmt="[%(asctime)s] [%(funcName)s] %(levelname)s > %(message)s",datefmt="%X")
 log_sh.setFormatter(log_format)
 log_fh.setFormatter(log_format)
 log.addHandler(log_sh)
 log.addHandler(log_fh)
-log.info("Log Start,已启动日志记录器")
-
+log.info("已启动日志记录器")
+java_list = {"java8":"http://m10072.ioee.vip/java/java8.zip",
+			 "java11":"http://m10072.ioee.vip/java/java11.zip",
+			 "java16":"http://m10072.ioee.vip/java/java16.zip",
+			 "java17":"http://m10072.ioee.vip/java/java17.zip",
+    		 "OpenLiteJava 8":"java8",
+       		 "OpenLiteJava 11":"java11",
+          	 "OpenLiteJava 16":"java16",
+             "OpenLiteJava 17":"java17"}
 minecraft_dir = runpath+"\\.minecraft"
 
 def get_osver():
@@ -107,13 +114,11 @@ def get_osver():
 		return ""
 	else:
 		return platform.uname().release
-
 def sha1(file_path):
 	with open(file_path,'rb') as f:
 		hash = hashlib.sha1(f.read()).hexdigest()
-		log.info("计算了sha1:"+hash)
+		log.debug("计算了sha1:"+hash)
 		return hash
-
 def down_file(url,file_path,mode="wb+",check=True,logout=True,libmode=False,libname="",libpath=""):
 	if libmode:
 		libpathlist = libname.split(":")
@@ -142,18 +147,17 @@ def down_file(url,file_path,mode="wb+",check=True,logout=True,libmode=False,libn
 	else:
 		if v:
 			if(logout):
-				log.info("下载:"+url)
+				log.debug("下载:"+url)
 			f.write(v.content)
 			f.close()
 			return 0
 		else:
 			log.warning("无法下载:"+url)
 			return 1
-
 def get_json(url,file_path="notsave",mode="wb+"):
-	v = web.get(url,headers="")
+	v = web.get(url,headers="")  # type: ignore
 	if v:
-		log.info("GET "+url+" as JSON")
+		log.debug("GET "+url+" as JSON")
 		if(file_path == "notsave"):
 			return js.loads(v.text)
 		else:
@@ -165,18 +169,16 @@ def get_json(url,file_path="notsave",mode="wb+"):
 	else:
 		log.error("Cannot GET "+url)
 		return
-
 def write_json(path,jsondict,mode="wb+"):
 	with open(path,mode) as f:
 		log.info("写入JSON"+path)
 		js.dump(jsondict,f)
-
 def down_verinfo(redown=False):
 	global mc_js
 	if redown:
 		log.info("下载Minecraft版本信息表中...")
 		if(get_json(mcurlinfo_verindex,runpath+"\\launcher/version.json")):
-			log.info("已下载Minecraft版本信息表,保存在 \\launcher\\version.json!")
+			log.debug("已下载Minecraft版本信息表,保存在 \\launcher\\version.json!")
 			return 0
 		else:
 			log.error("无法连接至"+mcurlinfo_verindex+"!")
@@ -187,19 +189,17 @@ def down_verinfo(redown=False):
 		mc_js = js.load(open(runpath+"\\launcher/version.json","r",encoding="utf-8"))
 		log.info("已加载Minecraft版本信息表.")
 		return 0
-
 def datecov_utc(time,format="%Y/%m/%d %H:%M:%S"):
 	time_first = time.split("T")
 	time_second = time_first[1].split("+")
 	time_full = datetime.datetime.strptime(time_first[0]+" "+time_second[0],"%Y-%m-%d %H:%M:%S")
-	log.info("转换时间(+00:00): "+time)
+	log.debug("转换时间(+00:00): "+time)
 	return (time_full+datetime.timedelta(hours=8)).strftime(format)
-
 def down_verjson(minecraft_path,ver,name="~~usever~~",redown=False):
 	i = 0
 	if(name == "~~usever~~"):
 		name = ver
-	log.info(".minecraft目录:"+minecraft_path)
+	log.debug(".minecraft目录:"+minecraft_path)
 	chkdir(minecraft_path)
 	chkdir(minecraft_path+"\\versions")
 	if(os.path.exists(minecraft_path+"\\versions\\"+ver) == False or redown):
@@ -220,7 +220,6 @@ def down_verjson(minecraft_path,ver,name="~~usever~~",redown=False):
 		log.warning("已经下载过"+ver+name+"不会再下载")
 		log.debug("redown json mode:"+str(redown))
 		return 2
-
 class DownloadThread (threading.Thread):
 	def __init__(self,threadID,name,urllist,mode="wb+"):
 		threading.Thread.__init__(self)
@@ -228,24 +227,22 @@ class DownloadThread (threading.Thread):
 		self.name = name
 		self.urllist = urllist
 		self.mode = mode
-		log.info(f"下载线程已设置#{str(self.threadID)}: {self.name}")
+		log.debug(f"下载线程已设置#{str(self.threadID)}: {self.name}")
 	def run(self):
 		global down_tmp_times
-		log.info(f"启动下载线程#{str(self.threadID)}: {self.name}")
+		log.debug(f"启动下载线程#{str(self.threadID)}: {self.name}")
 		time.sleep(2)
 		for i in range(len(self.urllist)):
 			down_file(self.urllist[i][0],self.urllist[i][1],self.mode,False)
 			shutil.copyfile(self.urllist[i][1],self.urllist[i][2])
 			down_tmp_times += 1
-		log.info(f"关闭下载线程#{str(self.threadID)}: {self.name}")
-
+		log.debug(f"关闭下载线程#{str(self.threadID)}: {self.name}")
 def down_objects(mc_path,ver_js):
 	global down_tmp_times
 	down_tmp_times = 0
 	i = 0
 	ThreadNum = 256
 	#web.adapters.DEFAULT_RETRIES = ThreadNum // 1.25
-	log.debug("run func")
 	chkdir(mc_path+"\\assets")
 	chkdir(mc_path+"\\assets\\indexes")
 	chkdir(mc_path+"\\assets\\objects")
@@ -261,7 +258,7 @@ def down_objects(mc_path,ver_js):
 	with alive_bar(len(tmp_list_obj)-1,title="Download Minecraft Objects",spinner="dots_waves",bar="smooth",force_tty=True) as bar:
 		while True:
 			if(i==0):
-				bar.text("Creating Download Threads")
+				# bar.text("Creating Download Threads")
 				chkdir(mc_path+"\\assets\\")
 				chkdir(mc_path+"\\assets\\virtual\\")
 				chkdir(mc_path+"\\assets\\virtual\\legacy\\")
@@ -287,22 +284,22 @@ def down_objects(mc_path,ver_js):
 				for j in range(ThreadNum):
 					tmp_thread[j].start()
 			if(down_tmp_times > now_keys):
-				bar()
 				now_keys += 1
+				# bar.text("                         ")
+				bar()
 			#bar.text(f"Downloading object #{str(down_tmp_times)} All:{len(tmp_list_obj)}")
 			if(down_tmp_times==len(tmp_list_obj)):
 				break
 	log.info("成功下载所有Objects!")
-
 def search_version(ver_dir):
+	chkdir(ver_dir)
 	out = []
 	for i in os.listdir(ver_dir):
-		if(os.path.isdir(i)):
+		if(os.path.isdir(ver_dir+"\\"+i+"\\")):
 			out.append(i)
 	return out
-
 def check_rules(rule_js):
-	log.info("正在检查Rule是否满足")
+	log.debug("正在检查Rule是否满足")
 	return_ok = False
 	if(rule_js["action"]=="allow"):
 		return_ok = False
@@ -325,13 +322,11 @@ def check_rules(rule_js):
 				if(not re.match(value, get_osver())):
 					return return_ok
 	return not return_ok
-
 def check_rules_list(all_rule_js):
 	for i in all_rule_js:
 		if not check_rules(i):
 			return False
 	return True
-
 def down_main_jar(now_js,mc_path,name,client=True):
 	log.info("正在下载主JAR,大约1~10秒,请耐心等待!")
 	down_type = "server"
@@ -352,7 +347,6 @@ def down_main_jar(now_js,mc_path,name,client=True):
 	else:
 		log.error("无法效验JAR SHA1!")
 		return 1
-
 def check_natives(now_lib_js):
 	if("natives" in now_lib_js):
 		if platform.system() == 'Windows':
@@ -366,16 +360,14 @@ def check_natives(now_lib_js):
 				return now_lib_js["natives"]["linux"]
 	else:
 		return ""
-
-def ext_natives(file,ext_path,ext_data):
+def ext_natives(file,ext_path):
 	chkdir(ext_path)
 	zip = zipfile.ZipFile(file, "r")
 	for i in zip.namelist():
-		for e in ext_data["exclude"]:
-			if i.startswith(e):
-				continue
+#		for e in ext_data["exclude"]:
+#			if i.startswith(e):
+#				continue
 		zip.extract(i, ext_path)
-
 def down_libraries(now_js,mc_path,mc_name):
 	with alive_bar(len(now_js["libraries"]),title="Download Minecraft Libraries",spinner="dots_waves",bar="smooth",force_tty=True) as bar:
 		for i,lib_key in enumerate(now_js["libraries"]):
@@ -386,90 +378,105 @@ def down_libraries(now_js,mc_path,mc_name):
 				mclib_path = mc_path + "\\libraries\\"
 				chkdir(mclib_path)
 				native = check_natives(lib_key)
-				tmp_url = mcurlinfo_libraries+(lib_key["downloads"]["artifact"]["url"].split("https://libraries.minecraft.net")[1])
-				# bar.text("Downloading "+tmp_url)
-				if(down_file(tmp_url,mclib_path+lib_key["downloads"]["artifact"]["path"],"wb+",True,True,True,lib_key["name"],mclib_path)==1):
-					if("downloads" not in lib_key):
-						if("extract" in lib_key):
-							ext_natives(mclib_path+lib_key["downloads"]["classifiers"][native]["path"],mc_path+"\\versions\\"+mc_name+"\\natives", lib_key["extract"])
+				if "artifact" in lib_key["downloads"]:
+					tmp_url = mcurlinfo_libraries+(lib_key["downloads"]["artifact"]["url"].split("https://libraries.minecraft.net")[1])
+					# log.info("Downloading "+tmp_url)
+					down_file(tmp_url,mclib_path+lib_key["downloads"]["artifact"]["path"],"wb+",True,True,True,lib_key["name"],mclib_path)
 				if(native != ""):
 					down_file(lib_key["downloads"]["classifiers"][native]["url"],mclib_path+lib_key["downloads"]["classifiers"][native]["path"],"wb+",True,True,True,lib_key["name"],mclib_path)
 					if(sha1(mclib_path+lib_key["downloads"]["classifiers"][native]["path"]) != lib_key["downloads"]["classifiers"][native]["sha1"]):
 						log.error("效验SHA1失败,文件可能已被篡改!")
 						return
-					if "extract" in lib_key:
-						ext_natives(mclib_path+lib_key["downloads"]["classifiers"][native]["path"],mc_path+"\\versions\\"+mc_name+"\\natives", lib_key["extract"])
+					ext_natives(mclib_path+lib_key["downloads"]["classifiers"][native]["path"],mc_path+"\\versions\\"+mc_name+"\\natives")
+				if("extract" in lib_key):
+					ext_natives(mclib_path+lib_key["downloads"]["classifiers"][native]["path"],mc_path+"\\versions\\"+mc_name+"\\natives")
 			bar()
+def unpack_java(file_ext,java_path):
+	log.info("OpenLiteJava Fast Installer V0.1.0a")
+	log.info("Installing...")
+	with zipfile.ZipFile(file_ext,"r") as z:
+		for member in tqdm(z.infolist(),ncols=60):
+			z.extract(member,java_path)
+def download_java(javaname):
+	log.info(javaname+"下载中")
+	websession = web.Session()
+	resp = websession.request(url=java_list[javaname],method="GET",stream=True)
+	total = int(resp.headers.get("content-length",0))
+	with open(runpath+"\\launcher\\java\\"+javaname+".zip","wb+") as file , tqdm(
+			total=total,
+			unit="b",
+			unit_scale=True,
+			unit_divisor=1024,
+		 	ncols=60) as bar:
+		for data in resp.iter_content(chunk_size=1024):
+			size = file.write(data)
+			bar.update(size)
+	unpack_java(runpath+"\\launcher\\java\\"+javaname+".zip",runpath+"\\launcher\\java")
+	log.info(javaname+"已经安装完成")
+def check_java():
+    choosejava = java_list[javaver_var.get()]
+    download_java(choosejava)
+def start_minecraft():
+	log.info("正在尝试启动版本"+verc_var.get())
+	if verc_var.get() not in search_version(minecraft_dir+"\\versions"):
+		log.error("Cannot find version,please try again")
+		return
 
 def okbtnrun():
 	# vername = input("Version name:")
-	vername = "1.18.2"
+	vername = vers_var.get()
+	# vername = "1.18.2"
 	log.info("准备下载"+vers_var.get()+" JSON")
 	down_verjson(minecraft_dir,vers_var.get(),vername)
 	now_js = js.load(open(minecraft_dir+"\\versions\\"+vername+"\\"+vername+".json","r",encoding="utf-8"))
-	log.info("debug:"+datecov_utc(now_js["releaseTime"])+"||"+now_js["type"]+"||"+now_js["id"])
+	log.debug("clientinfo:"+datecov_utc(now_js["releaseTime"])+"||"+now_js["type"]+"||"+now_js["id"])
 	down_objects(minecraft_dir,now_js)
 	down_main_jar(now_js,minecraft_dir,vername,True)
 	down_libraries(now_js,minecraft_dir,vername)
-
-def ui_init():
-	i=0
+	log.info("SUCCESS!")
+def gui_init():
 	log.info("开始初始化GUI")
-	global uipage,vers,okbtn,vers_var
+	global uipage,vers,verc,javaver,okbtn,startbtn,jdbtn,vers_var,verc_var,javaver_var
 	uipage = Tk()
 	vers_var = StringVar()
-	uipage.geometry("200x75")
-	uipage.title("Easy Minecarft Launcher")
+	verc_var = StringVar()
+	javaver_var = StringVar()
+	uipage.geometry("235x105")
+	uipage.title(sys.argv[0])
 	vers = ttk.Combobox(uipage,textvariable=vers_var)
+	verc = ttk.Combobox(uipage,textvariable=verc_var)
+	javaver = ttk.Combobox(uipage,textvariable=javaver_var)
 	temp = []
 	for i in range(len(mc_js["versions"])-1):
 		temp.append(mc_js["versions"][i]["id"])
 	vers["value"] = tuple(temp)
-	okbtn = Button(uipage,text="Downlaod Minecraft",command=okbtnrun)
-	vers.current(8)
+	temp = search_version(minecraft_dir+"\\versions")
+	verc["value"] = tuple(temp)
+	javaver["value"] = ("OpenLiteJava 8","OpenLiteJava 11","OpenLiteJava 16","OpenLiteJava 17")
+	okbtn = Button(uipage,text="Downlaod",command=okbtnrun)
+	startbtn = Button(uipage,text="    Start    ",command=start_minecraft)
+	jdbtn = Button(uipage,text="    Check    ",command=check_java)
+	vers.current(40)
+	try:
+		verc.current(0)
+	except Exception:
+		log.warning("当前version目录中没有版本,点击Start会崩")
+	javaver.current(1)
 	vers.grid(column=0,row=0)
-	okbtn.grid(column=0,row=2)
-
+	okbtn.grid(column=1,row=0)
+	verc.grid(column=0,row=1)
+	startbtn.grid(column=1,row=1)
+	javaver.grid(column=0,row=2)
+	jdbtn.grid(column=1,row=2)
 def debug():
 	log.debug("debug start:")
 	for i,j,k in os.walk(runpath+"/.minecraft/versions"):
 		log.info(i)
 	log.debug("debug end")
-
 down_verinfo()
-ui_init()
+gui_init()
 log.info("窗口已经显示")
 #debug()
 uipage.mainloop()
 log.info("Stopped!")
-
-
-
-
-#def check_rule():
-#	if rule["action"] == "allow":
-#		returnvalue = False
-#    elif rule["action"] == "disallow":
-#        returnvalue = True
-#    if "os" in rule:
-#        for key, value in rule["os"].items():
-#            if key == "name":
-#                if value == "windows" and platform.system() != 'Windows':
-#                    return returnvalue
-#                elif value == "osx" and platform.system() != 'Darwin':
-#                    return returnvalue
-#                elif value == "linux" and platform.system() != 'Linux':
-#                    return returnvalue
-#            elif key == "arch":
-#                if value == "x86" and platform.architecture()[0] != "32bit":
-#                    return returnvalue
-#            elif key == "version":
-#                if not re.match(value, get_os_version()):
-#                    return returnvalue
-#    if "features" in rule:
-#        for key, value in rule["features"].items():
-#            if key == "has_custom_resolution" and not options.get("customResolution", False):
-#                return returnvalue
-#            elif key == "is_demo_user" and not options.get("demo", False):
-#                return returnvalue
-#    return not returnvalue
+#log.critical("PROGRAM CASH,PROGRAM WILL EXIT")
