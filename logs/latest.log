@@ -1,0 +1,28 @@
+[13:22:03] [Client thread/INFO]: Setting user: Dev
+[13:22:04] [Client thread/WARN]: Skipping bad option: lastServer:
+[13:22:04] [Client thread/INFO]: LWJGL Version: 2.9.4
+[13:22:04] [Client thread/INFO]: Reloading ResourceManager: Default
+[13:22:07] [Sound Library Loader/INFO]: Starting up SoundSystem...
+[13:22:07] [Thread-3/INFO]: Initializing LWJGL OpenAL
+[13:22:07] [Thread-3/INFO]: (The LWJGL binding of OpenAL.  For more information, see http://www.lwjgl.org)
+[13:22:07] [Thread-3/INFO]: OpenAL initialized.
+[13:22:08] [Sound Library Loader/INFO]: Sound engine started
+[13:22:09] [Client thread/INFO]: Created: 1024x512 textures-atlas
+[13:22:09] [Client thread/INFO]: Narrator library for x86 successfully loaded
+[13:22:54] [Client thread/ERROR]: Can't ping play.cubexmc.org: Disconnected
+[13:23:01] [Client thread/ERROR]: Can't ping play.cubexmc.org: Internal Exception: java.io.IOException: 您的主机中的软件中止了一个已建立的连接。
+[13:23:03] [Client thread/ERROR]: Can't ping play.cubexmc.org: Internal Exception: java.io.IOException: 您的主机中的软件中止了一个已建立的连接。
+[13:23:05] [Client thread/ERROR]: Can't ping play.cubexmc.org: Disconnected
+[13:23:06] [Client thread/ERROR]: Can't ping play.cubexmc.org: Internal Exception: java.io.IOException: 您的主机中的软件中止了一个已建立的连接。
+[13:23:06] [Client thread/ERROR]: Can't ping play.cubexmc.org: Disconnected
+[13:23:54] [Client thread/ERROR]: Can't ping play.cubexmc.org: Internal Exception: java.io.IOException: 您的主机中的软件中止了一个已建立的连接。
+[13:23:55] [Client thread/ERROR]: Can't ping play.cubexmc.org: Disconnected
+[13:23:57] [Client thread/ERROR]: Can't ping play.cubexmc.org: Disconnected
+[13:23:57] [Client thread/ERROR]: Can't ping play.cubexmc.org: Internal Exception: java.io.IOException: 您的主机中的软件中止了一个已建立的连接。
+[13:23:57] [Client thread/ERROR]: Can't ping play.cubexmc.org: Disconnected
+[13:24:06] [Client thread/INFO]: Connecting to play.cubexmc.org, 25565
+[13:26:30] [Client thread/INFO]: Realms library version == 1.10.22
+[13:26:31] [MCO Compatability Checker #1/ERROR]: Couldn't connect to realms: 
+[13:26:38] [Client thread/INFO]: Stopping!
+[13:26:38] [Client thread/INFO]: SoundSystem shutting down...
+[13:26:38] [Client thread/WARN]: Author: Paul Lamb, www.paulscode.com

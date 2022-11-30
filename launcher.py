@@ -1,3 +1,4 @@
+import subprocess
 from tkinter import *
 import json as js
 import os
@@ -17,8 +18,12 @@ import tkinter.ttk as ttk
 from alive_progress import alive_bar
 from tqdm import tqdm
 
+LAUNCHER_NAME = "EMCL"
+LAUNCHER_VERSION = "v0.1.0a"
+TOKEN = "0000000000003003998F501BCC513E7E"
 LOGS_LEVEL = logging.INFO
 USE_MIRROR = "s" # BMCLAPI = "b" MCBBS = "s" Minecraft.net = "o"
+JVM_ARG = " -XX:+UseG1GC -XX:-UseAdaptiveSizePolicy -XX:-OmitStackTraceInFastThrow -Dfml.ignoreInvalidMinecraftCertificates=True -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Dlog4j2.formatMsgNoLookups=true -Xmn128m"
 
 ############################################################
 if(USE_MIRROR == "b"):
@@ -255,7 +260,8 @@ def down_objects(mc_path,ver_js):
 	for everyKey in obj_json["objects"].keys():
 		tmp_list_obj.append(everyKey)
 	now_keys = 0
-	with alive_bar(len(tmp_list_obj)-1,title="Download Minecraft Objects",spinner="dots_waves",bar="smooth",force_tty=True) as bar:
+	nowkey = 0
+	with alive_bar(len(tmp_list_obj),title="Download Minecraft Objects",spinner="dots_waves",bar="smooth",force_tty=True) as bar:
 		while True:
 			if(i==0):
 				# bar.text("Creating Download Threads")
@@ -269,19 +275,24 @@ def down_objects(mc_path,ver_js):
 						rangetimes += 1
 						end_dl_len -= 1
 					for j in range(rangetimes):
-						now_obj_sha1 = obj_json["objects"][tmp_list_obj[j]]["hash"]
+						if(nowkey == len(tmp_list_obj)):
+							break
+						now_obj_sha1 = obj_json["objects"][tmp_list_obj[nowkey]]["hash"]
 						now_obj_sha1_list = list(now_obj_sha1)
 						now_url = mcurlinfo_object+now_obj_sha1_list[0]+now_obj_sha1_list[1]+"/"+now_obj_sha1
-						tmp_urllist.append([now_url,mc_path+"\\assets\\objects\\"+now_obj_sha1_list[0]+now_obj_sha1_list[1]+"\\"+now_obj_sha1,mc_path+"\\assets\\virtual\\legacy\\"+tmp_list_obj[j]])
+						tmp_urllist.append([now_url,mc_path+"\\assets\\objects\\"+now_obj_sha1_list[0]+now_obj_sha1_list[1]+"\\"+now_obj_sha1,mc_path+"\\assets\\virtual\\legacy\\"+tmp_list_obj[nowkey]])
 						chkdir(mc_path+"\\assets\\objects\\"+now_obj_sha1_list[0]+now_obj_sha1_list[1]+"\\")
-						for l in range(len(tmp_list_obj[j].split("/"))-1):
-							tmp_copydir += tmp_list_obj[j].split("/")[l]+"\\"
+						for l in range(len(tmp_list_obj[nowkey].split("/"))-1):
+							tmp_copydir += tmp_list_obj[nowkey].split("/")[l]+"\\"
 						chkdir(mc_path+"\\assets\\virtual\\legacy\\"+tmp_copydir)
 						tmp_copydir = ""
+						nowkey += 1
+						if nowkey == 749:
+							continue
 					tmp_thread.append(DownloadThread(k,"OBJ-DL"+str(k),tmp_urllist))
 					tmp_urllist = []
 				i = 1
-				for j in range(ThreadNum):
+				for j in range(len(tmp_thread)):
 					tmp_thread[j].start()
 			if(down_tmp_times > now_keys):
 				now_keys += 1
@@ -416,12 +427,56 @@ def download_java(javaname):
 def check_java():
     choosejava = java_list[javaver_var.get()]
     download_java(choosejava)
+def parse_arguments(arg,mcdir="",verdir="",cplist="",uname="",uuid="",token="",utype="",ver="",verjs=[""]):
+    arg = arg.replace("${natives_directory}",  os.path.realpath(verdir+"\\natives"))
+    arg = arg.replace("${launcher_name}",      LAUNCHER_NAME)
+    arg = arg.replace("${launcher_version}",   LAUNCHER_VERSION)
+    arg = arg.replace("${classpath}",          cplist)
+    arg = arg.replace("${auth_player_name}",   uname)
+    arg = arg.replace("${version_name}",       ver)
+    arg = arg.replace("${game_directory}",     os.path.realpath(mcdir))
+    arg = arg.replace("${assets_root}",        os.path.realpath(mcdir+"\\assets"))
+    arg = arg.replace("${assets_index_name}",  ver)#js["assetIndex"]["id"]
+    arg = arg.replace("${auth_uuid}",          uuid)
+    arg = arg.replace("${auth_access_token}",  token)
+    arg = arg.replace("${user_type}",          utype)
+    arg = arg.replace("${version_type}",       LAUNCHER_NAME+LAUNCHER_VERSION)
+    arg = arg.replace("${user_properties}",    "{}")
+    arg = arg.replace("${resolution_width}",   "854")
+    arg = arg.replace("${resolution_height}",  "480")
+    arg = arg.replace("${game_assets}",        os.path.realpath(mcdir+"\\assets\\virtual\\legacy"))
+    arg = arg.replace("${auth_session}",       token)
+    arg = arg.replace("${library_directory}",  os.path.realpath(mcdir+"\\libraries"))
+    return arg
+def start_minecraft_v1(mcdir,version,ver_js,java,mem="512"):
+    finalcmd = os.path.realpath(runpath+"\\launcher\\java\\"+java+"\\bin\\java.exe") + JVM_ARG + " -Xmx"+ mem +'m "-Djava.library.path=' + os.path.realpath(mcdir+"\\versions\\"+version+"\\natives") + '" -cp "'
+    tmp_cplist = ""
+    tmp_cpf = ":"
+    if(platform.system() == "Windows"):
+        tmp_cpf = ";"
+    for key in ver_js["libraries"]:
+        crules = True
+        if "rules" in key:
+            crules = check_rules_list(key["rules"])
+        if(crules):
+            if "artifact" in key["downloads"]:
+                tmp_cplist += os.path.realpath(mcdir+"\\libraries\\"+key["downloads"]["artifact"]["path"]) + tmp_cpf
+    finalcmd += tmp_cplist + os.path.realpath(mcdir+"\\versions\\"+version+"\\"+version+".jar") + '" ' + ver_js["mainClass"] + " "
+    finalcmd += parse_arguments(ver_js["minecraftArguments"],mcdir=mcdir,uname="Dev",token=TOKEN,uuid=TOKEN,ver=ver_js["id"],utype="Legacy",verjs=ver_js)
+    finalcmd = finalcmd.replace("\\","/")
+    subprocess.call(finalcmd,shell=True)
+def start_minecraft_v2(mcdir,version,ver_js,java,mem="512"):
+    pass
 def start_minecraft():
 	log.info("正在尝试启动版本"+verc_var.get())
 	if verc_var.get() not in search_version(minecraft_dir+"\\versions"):
 		log.error("Cannot find version,please try again")
 		return
-
+	now_js = js.load(open(minecraft_dir+"\\versions\\"+verc_var.get()+"\\"+verc_var.get()+".json","r",encoding="utf-8"))
+	if "arguments" not in now_js:
+		start_minecraft_v1(minecraft_dir,verc_var.get(),now_js,java_list[javaver_var.get()])
+	else:
+		start_minecraft_v2(minecraft_dir,verc_var.get(),now_js,java_list[javaver_var.get()])
 def okbtnrun():
 	# vername = input("Version name:")
 	vername = vers_var.get()
